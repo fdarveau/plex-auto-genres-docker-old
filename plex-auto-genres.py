@@ -160,6 +160,8 @@ def generate():
                 failed_media.append(m.title)
                 continue
             for genre in genres:
+                if (len(PLEX_COLLECTION_PREFIX) > 0):
+                    genre = PLEX_COLLECTION_PREFIX + genre
                 m.addCollection(genre.strip())
 
             finished_media.append(m.title)
