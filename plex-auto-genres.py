@@ -1,3 +1,5 @@
+#Based on commit 372d917 (https://raw.githubusercontent.com/ShaneIsrael/plex-auto-genres/372d917/plex-auto-genres.py)
+
 import os
 import sys
 import argparse
@@ -22,6 +24,7 @@ PLEX_PASSWORD = os.getenv("PLEX_PASSWORD")
 PLEX_SERVER_NAME = os.getenv("PLEX_SERVER_NAME")
 PLEX_BASE_URL = os.getenv("PLEX_BASE_URL")
 PLEX_TOKEN = os.getenv("PLEX_TOKEN")
+PLEX_COLLECTION_PREFIX = os.getenv("PLEX_COLLECTION_PREFIX", "")
 tmdb.api_key = os.getenv("TMDB_API_KEY")
 
 example_text = '''example:
@@ -99,27 +102,31 @@ def fetch_anime(title):
         genres_list.append(genre['name'])
     return genres_list
 
-def fetch_standard(title):
+def fetch_standard(title, type):
     time.sleep(0.5)
-    if (args.type[0] == 'standard-movie'):
-        db = movie
-    else:
-        db = tv
-    search = db.search(title)
-    if (len(search) == 0):
+    try:
+        if (type == 'standard-movie'):
+            db = movie
+        else:
+            db = tv
+        search = db.search(title)
+        if (len(search) == 0):
+            return []
+        details = db.details(search[0].id)
+        genre_list = []
+        for genre in details.genres:
+            genre_list.extend(genre['name'].split(' & '))
+        return genre_list
+    except Exception as e:
+        print(f'\n\n{str(e)}, when searching for entry: {title}, of type {type}\nThis entry has been added to the failures.txt once the issue is corrected in your library remove the entry from failures.txt and try again.')
         return []
-    details = db.details(search[0].id)
-    genre_list = []
-    for genre in details.genres:
-        genre_list.extend(genre['name'].split(' & '))
-    return genre_list
 
 def generate():
     plex = connect_to_plex()
     finished_media = []
     failed_media = []
-    if (os.path.isfile('/logs/plex-'+args.library[0]+'-'+args.type[0]+'-tags-finished.txt')):
-        with open('/logs/plex-'+args.library[0]+'-'+args.type[0]+'-tags-finished.txt') as save_data:
+    if (os.path.isfile('/logs/plex-'+args.library[0]+'-'+args.type[0]+'-finished.txt')):
+        with open('/logs/plex-'+args.library[0]+'-'+args.type[0]+'-finished.txt') as save_data:
             finished_media = json.load(save_data)
     if (os.path.isfile('/logs/plex-'+args.library[0]+'-'+args.type[0]+'-failures.txt')):
         with open('/logs/plex-'+args.library[0]+'-'+args.type[0]+'-failures.txt') as save_data:
@@ -147,7 +154,7 @@ def generate():
             if (args.type[0] == 'anime'):
                 genres = fetch_anime(m.title)
             else:
-                genres = fetch_standard(m.title)
+                genres = fetch_standard(m.title, args.type[0])
 
             if (len(genres) == 0):
                 failed_media.append(m.title)
@@ -166,7 +173,7 @@ def generate():
         print(str(e))
 
     if (len(finished_media) > 0):
-        with open('/logs/plex-'+args.library[0]+'-'+args.type[0]+'-tags-finished.txt', 'w') as filehandle:
+        with open('/logs/plex-'+args.library[0]+'-'+args.type[0]+'-finished.txt', 'w') as filehandle:
             json.dump(finished_media, filehandle)
     if (len(failed_media) > 0):
         with open('/logs/plex-'+args.library[0]+'-'+args.type[0]+'-failures.txt', 'w') as filehandle:
@@ -175,5 +182,8 @@ def generate():
     sys.exit(0)
 
 if __name__ == '__main__':
-    print("\nYou are about to create ["+bcolors.WARNING+args.type[0]+bcolors.ENDC+"] genre collection tags for the library ["+bcolors.WARNING+args.library[0]+bcolors.ENDC+"] on your server ["+bcolors.WARNING+(PLEX_SERVER_NAME or PLEX_BASE_URL)+bcolors.ENDC+"].")
+    CONFIRMATION = "\nYou are about to create ["+bcolors.WARNING+args.type[0]+bcolors.ENDC+"] genre collection tags for the library ["+bcolors.WARNING+args.library[0]+bcolors.ENDC+"] on your server ["+bcolors.WARNING+(PLEX_SERVER_NAME or PLEX_BASE_URL)+bcolors.ENDC+"]."
+    if (len(PLEX_COLLECTION_PREFIX) > 0):
+        CONFIRMATION += "With prefix ["+bcolors.WARNING+PLEX_COLLECTION_PREFIX+bcolors.ENDC+"]."
+    print(CONFIRMATION)
     generate()

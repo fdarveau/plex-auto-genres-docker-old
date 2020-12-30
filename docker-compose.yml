@@ -13,4 +13,5 @@ services:
       - PLEX_SERVER_NAME=xxx
       - PLEX_BASE_URL=xxx
       - PLEX_TOKEN=xxx
+      - PLEX_COLLECTION_PREFIX = ""
       - TMDB_API_KEY=xxx

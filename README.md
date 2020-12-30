@@ -6,14 +6,15 @@ Link to DockerHub : https://hub.docker.com/r/frank2312/plex-auto-genres
 ## How to Use
 - Create the container. You can use the `docker-compose.yml` file as a template.
   - There are 2 ways to connect to your server : using your credentials and server name, or using an existing token and your server's URL.
-    |Variable|Authentication method|Value|
-    |---|---|---|
-    |PLEX_USERNAME|Username and password|Your Plex Username|
-    |PLEX_PASSWORD|Username and password|Your Plex Password|
-    |PLEX_SERVER_NAME|Username and password|Your Plex Server Name|
-    |PLEX_BASE_URL|Token|Your Plex Server base URL|
-    |PLEX_TOKEN|Token|Your Plex Token|
-    |TMDB_API_KEY|Both|Your the movie database api key (not required for anime library tagging)|
+    |Variable|Required|Authentication method|Value|
+    |---|:-:|---|---|
+    |PLEX_USERNAME|X|Username and password|Your Plex Username|
+    |PLEX_PASSWORD|X|Username and password|Your Plex Password|
+    |PLEX_SERVER_NAME|X|Username and password|Your Plex Server Name|
+    |PLEX_BASE_URL|X|Token|Your Plex Server base URL|
+    |PLEX_TOKEN|X|Token|Your Plex Token|
+    |PLEX_COLLECTION_PREFIX|||Prefix for the created Plex collections. For example, with a value of "\*", a collection named "Adventure", the name would instead be "*Adventure".<br><br>Default value : ""|
+    |TMDB_API_KEY|X||Your the movie database api key (not required for anime library tagging)|
 - Volume mount the `/config` folder that will contain the libraries for which you want the collections generated.
 - (Optional) Volume mount the `/logs` folder that will contain the log files. The files can still be accessed by connecting to the container if it is not mounted.
   - Titles in the log files will not be re-processed. You must delete the log files to start a fresh run.
